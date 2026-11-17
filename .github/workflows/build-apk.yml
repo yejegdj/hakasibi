@@ -23,18 +23,33 @@ jobs:
           set -euo pipefail
           SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
           SDKMANAGER="$(find "$SDK_ROOT/cmdline-tools" -type f -name sdkmanager | head -n 1)"
-          if [[ -z "$SDKMANAGER" ]]; then
-            echo "::error::sdkmanager not found under $SDK_ROOT"
-            exit 1
-          fi
+          if [[ -z "$SDKMANAGER" ]]; then echo "::error::sdkmanager missing"; exit 1; fi
           yes | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --licenses > /dev/null || true
           "$SDKMANAGER" --sdk_root="$SDK_ROOT" --install "platforms;android-35" "build-tools;35.0.0"
-      - name: Build debug APK
-        run: gradle --no-daemon --stacktrace assembleDebug
-      - name: Upload APK
-        if: success()
-        uses: actions/upload-artifact@v4
+      - name: Build safer and experimental variants
+        run: gradle --no-daemon --stacktrace assembleSafeDebug assembleAdvancedDebug
+      - name: Verify manifests and copy APKs
+        shell: bash
+        run: |
+          set -euo pipefail
+          AAPT="${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools/35.0.0/aapt"
+          SAFE=app/build/outputs/apk/safe/debug/app-safe-debug.apk
+          ADV=app/build/outputs/apk/advanced/debug/app-advanced-debug.apk
+          test -s "$SAFE" && test -s "$ADV"
+          "$AAPT" dump badging "$SAFE" | grep package
+          if "$AAPT" dump xmltree "$SAFE" AndroidManifest.xml | grep -q 'BIND_ACCESSIBILITY_SERVICE'; then
+            echo "::error::Safe APK unexpectedly declares accessibility permission"
+            exit 1
+          fi
+          cp "$SAFE" QwenTouchAI-Safe.apk
+          cp "$ADV" QwenTouchAI-Experimental.apk
+      - uses: actions/upload-artifact@v4
         with:
-          name: QwenTouchAI-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: QwenTouchAI-Safe
+          path: QwenTouchAI-Safe.apk
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: QwenTouchAI-Experimental
+          path: QwenTouchAI-Experimental.apk
           if-no-files-found: error

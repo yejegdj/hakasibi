@@ -1,1 +1,4 @@
-<resources><string name="app_name">Qwen Touch AI</string><string name="service_desc">With your approval, examines screenshots and performs touch gestures for Qwen-guided tasks.</string></resources>
+<resources>
+  <string name="app_name">Qwen Touch AI</string>
+  <string name="service_desc">각 단계를 사용자가 직접 승인하면 Qwen의 화면 분석과 터치 제안을 수행합니다.</string>
+</resources>

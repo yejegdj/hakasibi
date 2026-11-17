@@ -6,8 +6,20 @@ android {
     applicationId 'com.example.qwentouch'
     minSdk 30
     targetSdk 35
-    versionCode 1
-    versionName '0.1.0'
+    versionCode 2
+    versionName '0.2.0'
+  }
+  flavorDimensions 'mode'
+  productFlavors {
+    safe {
+      dimension 'mode'
+      applicationIdSuffix '.safe'
+      versionNameSuffix '-safe'
+    }
+    advanced {
+      dimension 'mode'
+      versionNameSuffix '-advanced'
+    }
   }
   compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
 }
